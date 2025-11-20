@@ -1,0 +1,49 @@
+---
+import type { CustomFieldSet } from '@lib/posts/api'
+import RenderField from './RenderField.astro'
+
+export interface Props {
+  fieldSet: CustomFieldSet
+  fields: Record<string, unknown>
+}
+
+const { fieldSet, fields } = Astro.props
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value)
+
+const normalizedFields = isRecord(fields) ? fields : {}
+
+const slugToCamelCase = (slug: string) =>
+  slug
+    .split(/[-_\s]+/)
+    .map((segment, index) => {
+      if (index === 0) {
+        return segment.toLowerCase()
+      }
+      return segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase()
+    })
+    .join('')
+
+const fieldEntries = (fieldSet.definitions ?? []).map((definition) => ({
+  definition,
+  fieldValue: normalizedFields[slugToCamelCase(definition.slug)],
+}))
+---
+
+{fieldEntries.length > 0 ? (
+  <div class="custom-fields-container">
+    <h2>{fieldSet.name}</h2>
+    {fieldEntries.map(({ definition, fieldValue }) => (
+      <RenderField definition={definition} fieldValue={fieldValue} />
+    ))}
+  </div>
+) : null}
+
+<style>
+  .custom-fields-container { 
+    margin-top: 2rem; 
+    padding-top: 1.5rem; 
+    border-top: 1px solid #e5e7eb; 
+  }
+</style>

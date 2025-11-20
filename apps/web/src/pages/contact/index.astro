@@ -1,0 +1,65 @@
+---
+import Layout from '@layouts/Layout.astro'
+---
+
+<Layout pageTitleJa="お問い合わせ">
+  <main class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-4">お問い合わせ</h1>
+    <p class="mb-8">ご質問やご相談など、お気軽にお問い合わせください。</p>
+
+    <!-- Input Screen -->
+    <div id="input-screen" class="space-y-6 max-w-lg mx-auto">
+      <form id="contact-form-input" data-form-slug="inquiry" class="space-y-6">
+        <div id="dynamic-fields" class="space-y-6"></div>
+        <div>
+          <div id="turnstile-container-input" class="flex justify-center"></div>
+          <input type="hidden" name="turnstileToken" id="turnstile-token-input" />
+        </div>
+        <div>
+          <button
+            type="submit"
+            class="inline-flex w-full items-center justify-center rounded-md bg-blue-600 px-4 py-2 font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            id="preview-button"
+          >
+            確認画面へ
+          </button>
+        </div>
+      </form>
+      <div id="response-message-input" class="text-center"></div>
+    </div>
+
+    <!-- Confirm Screen -->
+    <div id="confirm-screen" class="space-y-6 max-w-lg mx-auto hidden">
+      <h2 class="text-2xl font-semibold">内容確認</h2>
+      <dl id="confirm-list" class="space-y-4"></dl>
+      <div class="flex gap-4">
+        <button
+          id="back-to-input"
+          class="inline-flex items-center justify-center rounded-md bg-gray-600 px-4 py-2 font-medium text-white shadow-sm transition-colors hover:bg-gray-700"
+        >
+          戻る
+        </button>
+        <button
+          id="submit-button"
+          class="inline-flex flex-1 items-center justify-center rounded-md bg-blue-600 px-4 py-2 font-medium text-white shadow-sm transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          送信する
+        </button>
+      </div>
+      <div id="response-message-confirm" class="text-center"></div>
+    </div>
+
+    <!-- Complete Screen -->
+    <div id="complete-screen" class="space-y-6 max-w-lg mx-auto hidden">
+      <h2 class="text-2xl font-semibold text-green-600">送信完了</h2>
+      <p id="success-message" class="text-center text-lg">お問い合わせを受け付けました。</p>
+      <div class="text-center">
+        <a href="/" class="inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 font-medium text-white shadow-sm transition-colors hover:bg-blue-700">
+          ホームに戻る
+        </a>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script src="@lib/contact/inquiry/init.ts"></script>

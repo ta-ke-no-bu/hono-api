@@ -1,0 +1,16 @@
+{
+  "extends": "../../packages/typescript-config/tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "composite": true, // 他のプロジェクトから参照される場合に推奨
+    "declaration": true, // 型定義ファイルを出力
+    "noEmit": false, // 型定義ファイルを出力したいので false に設定
+    "emitDeclarationOnly": true, // .d.ts ファイルのみを出力
+    "outDir": "./dist",
+    "paths": {
+      "@shared/types/*": ["src/*"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

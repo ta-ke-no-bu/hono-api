@@ -1,0 +1,9 @@
+{
+  "extends": "../../packages/typescript-config/tsconfig.web.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "rootDir": "src"
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}

@@ -1,0 +1,35 @@
+{
+  "name": "@repo/ui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "svelte": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "svelte": "./src/index.ts",
+      "default": "./dist/ui.es.js"
+    },
+    "./styles.css": "./dist/index.css"
+  },
+  "scripts": {
+    "build:styles": "tailwindcss -i ./src/styles/global.css -o ./dist/index.css",
+    "build:components": "vite build",
+    "dev:styles": "tailwindcss -i ./src/styles/global.css -o ./dist/index.css --watch",
+    "dev:components": "vite build --watch",
+    "storybook": "storybook dev -p 6006 --no-open",
+    "build-storybook": "storybook build",
+    "dedupe": "echo 'bun dedupe is not supported, bun install handles deduplication'"
+  },
+  "devDependencies": {
+    "@chromatic-com/storybook": "^4.1.1",
+    "@storybook/addon-docs": "^9.1.5",
+    "@storybook/addon-links": "^9.1.5",
+    "@storybook/addon-svelte-csf": "^5.0.8",
+    "@storybook/sveltekit": "^9.1.5",
+    "@sveltejs/vite-plugin-svelte": "^5.0.3",
+    "@tailwindcss/vite": "*",
+    "storybook": "^9.1.5",
+    "svelte": "^5.33.6"
+  }
+}

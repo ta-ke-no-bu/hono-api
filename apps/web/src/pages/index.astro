@@ -1,0 +1,27 @@
+---
+import Layout from '@layouts/Layout.astro'
+import { Button } from '@repo/ui'
+---
+
+<Layout pageTitleJa="ホーム">
+  <section class="space-y-4">
+    <h1 class="text-2xl font-semibold">テスト</h1>
+    <p class="text-sm text-gray-600">
+      お問い合わせは
+      <a href="/contact" class="inline-flex">
+        <Button
+          label="こちら"
+          variant="primary"
+        />
+      </a>
+      からお願いします。
+    </p>
+    <p class="text-sm text-gray-600">
+      最新のお知らせは
+      <a href="/posts" class="inline-flex">
+        <Button label="投稿一覧" variant="secondary" />
+      </a>
+      から確認できます。
+    </p>
+  </section>
+</Layout>

@@ -1,0 +1,14 @@
+{
+  "extends": "../../../packages/typescript-config/tsconfig.web.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "composite": true,
+    "outDir": "./dist",
+    "declaration": true,
+    "paths": {
+      "@svelte-components/*": ["src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.svelte"],
+  "exclude": ["node_modules", "dist"]
+}

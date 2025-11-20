@@ -1,0 +1,256 @@
+generator client {
+  provider        = "prisma-client-js"
+  engineType      = "wasm"
+  previewFeatures = ["driverAdapters"]
+  binaryTargets = ["native", "darwin", "darwin-arm64"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 Int               @id @default(autoincrement())
+  email              String            @unique
+  password           String
+  name               String?
+  dummyField         String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  failedLoginAttempts Int              @default(0)
+  lockUntil          DateTime?
+  appSettings        AppSetting[]      @relation("AppSettingUpdatedBy")
+  postsCreated       Post[]            @relation("PostCreatedBy")
+  postsUpdated       Post[]            @relation("PostUpdatedBy")
+  postSettingsCreated PostSetting[]    @relation("PostSettingCreatedBy")
+  postSettingsUpdated PostSetting[]    @relation("PostSettingUpdatedBy")
+}
+
+model AppSetting {
+  key             String   @id
+  value           Json
+  updatedByUserId Int?
+  updatedByUser   User?    @relation("AppSettingUpdatedBy", fields: [updatedByUserId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+enum ContactFieldType {
+  TEXT
+  TEXTAREA
+  EMAIL
+  TEL
+  SELECT
+  RADIO
+  CHECKBOX
+  NUMBER
+  DATE
+}
+
+enum ContactRecipientType {
+  PRIMARY
+  CC
+  BCC
+}
+
+enum EmailRetryKind {
+  ADMIN_NOTIFICATION
+  AUTO_REPLY
+}
+
+enum EmailRetryStatus {
+  PENDING
+  EXHAUSTED
+}
+
+model ContactForm {
+  id                String                 @id @default(cuid())
+  name              String
+  slug              String                 @unique
+  description       String?
+  successMessage    String?
+  autoReplyTemplate         String?
+  sendAutoReply             Boolean                @default(true)
+  autoReplySubject          String?
+  sendAdminNotification     Boolean                @default(true)
+  adminNotificationSubject  String?
+  adminNotificationTemplate String?
+  isActive                  Boolean                @default(true)
+  replyToFieldSlug  String?
+  turnstileEnabled          Boolean                @default(true) // フォームごとにTurnstile有効化制御
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  recipients        ContactFormRecipient[]
+  submissions       ContactSubmission[]
+}
+
+model ContactFormRecipient {
+  id        String               @id @default(cuid())
+  formId    String
+  form      ContactForm          @relation(fields: [formId], references: [id], onDelete: Cascade)
+  email     String
+  type      ContactRecipientType @default(PRIMARY)
+  createdAt DateTime             @default(now())
+}
+
+model ContactSubmission {
+  id             String   @id @default(uuid())
+  formId         String
+  form           ContactForm @relation(fields: [formId], references: [id])
+  payload        Json
+  emailStatus    String   @default("sending")
+  resendEmailId  String?  @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  submittedIp    String?
+  userAgent      String?
+  displayName    String?
+  displayEmail   String?
+  displaySubject String?
+  legacyName     String?   @map("name")
+  legacyCompany  String?   @map("company")
+  legacyEmail    String?   @map("email")
+  legacyTelephone String?  @map("telephone")
+  legacyMessage  String?   @map("message")
+  emailRetryQueue EmailRetryQueue[]
+
+  @@map("Contact")
+  @@index([formId, createdAt])
+}
+
+model EmailRetryQueue {
+  id                    String           @id @default(cuid())
+  contactSubmissionId   String
+  contactSubmission     ContactSubmission @relation(fields: [contactSubmissionId], references: [id], onDelete: Cascade)
+  kind                  EmailRetryKind
+  attempts              Int              @default(0)
+  lastError             String?
+  nextRunAt             DateTime
+  status                EmailRetryStatus @default(PENDING)
+  payload               Json
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  @@index([status, nextRunAt])
+  @@unique([contactSubmissionId, kind])
+}
+
+model ErrorLog {
+  id           Int      @id @default(autoincrement())
+  createdAt    DateTime @default(now())
+  statusCode   Int?
+  path         String?
+  errorMessage String
+  stackTrace   String?
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  userId    Int?
+  eventType String
+  ipAddress String?
+  userAgent String?
+  details   String? // イベントの詳細情報（JSON形式など）
+
+  @@index([userId])
+}
+
+model Post {
+  id              String   @id @default(cuid())
+  postSettingId   String
+  title           String
+  detailEnabled   Boolean @default(false)
+  detailSlug      String?
+  detailBody      String?
+  publishedAt     DateTime?
+  postedAt        DateTime @default(now())
+  status          PostStatus @default(DRAFT)
+  categoryId      String?
+  customFields    String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  createdByUserId Int?
+  updatedByUserId Int?
+  createdByUser   User?    @relation("PostCreatedBy", fields: [createdByUserId], references: [id])
+  updatedByUser   User?    @relation("PostUpdatedBy", fields: [updatedByUserId], references: [id])
+  category        Category? @relation(fields: [categoryId], references: [id])
+  postSetting     PostSetting @relation(fields: [postSettingId], references: [id], onDelete: Restrict)
+
+  @@index([createdAt])
+  @@index([postedAt])
+  @@index([publishedAt])
+  @@index([categoryId])
+  @@index([postSettingId])
+  @@unique([detailSlug])
+}
+
+enum PostSettingStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum CustomFieldType {
+  text
+  richText
+  date
+  file
+  select
+  checkbox
+  group
+}
+
+model PostSetting {
+  id                    String                 @id @default(cuid())
+  name                  String
+  slug                  String                 @unique
+  status                PostSettingStatus      @default(ACTIVE)
+  description           String?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  createdByUserId       Int?
+  updatedByUserId       Int?
+  createdByUser         User?                  @relation("PostSettingCreatedBy", fields: [createdByUserId], references: [id])
+  updatedByUser         User?                  @relation("PostSettingUpdatedBy", fields: [updatedByUserId], references: [id])
+  fieldDefinitions      CustomFieldDefinition[]
+  posts                 Post[]
+
+  @@index([status])
+}
+
+model CustomFieldDefinition {
+  id            String                @id @default(cuid())
+  postSettingId String
+  parentId      String?
+  type          CustomFieldType
+  slug          String
+  label         String
+  description   String?
+  isRepeatable  Boolean               @default(false)
+  config        String?
+  validation    String?
+  order         Int                   @default(0)
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  postSetting   PostSetting           @relation(fields: [postSettingId], references: [id], onDelete: Cascade)
+  parent        CustomFieldDefinition?  @relation("CustomFieldDefinitionChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children      CustomFieldDefinition[] @relation("CustomFieldDefinitionChildren")
+
+  @@index([postSettingId, order])
+  @@unique([postSettingId, slug])
+}
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Category {
+  id        String  @id @default(cuid())
+  name      String  @unique
+  slug      String? @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  posts     Post[]
+}

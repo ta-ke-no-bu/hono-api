@@ -1,0 +1,16 @@
+{
+  "extends": "../../../packages/typescript-config/tsconfig.web.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "jsx": "react-jsx",
+    "jsxImportSource": "react", // React 17+ の新しい JSX 変換
+    "composite": true,
+    "outDir": "./dist",
+    "declaration": true,
+    "paths": {
+      "@react-components/*": ["src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules", "dist"]
+}

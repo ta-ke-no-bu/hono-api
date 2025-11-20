@@ -1,0 +1,25 @@
+{
+  "extends": "../../packages/typescript-config/tsconfig.node.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@routes/*": ["src/routes/*"],
+      "@db/*": ["src/db/*"],
+      "@schemas/*": ["src/schemas/*"], // 例: スキーマ定義など
+      "@services/*": ["src/services/*"], // 例: ビジネスロジック
+      "@utils/*": ["src/utils/*"], // 例: utils関数
+      "@repositories/*": ["src/repositories/*"], // 例:  DB操作
+      // 共有パッケージへのエイリアス（バックエンドで必要となるもののみ）
+      "@shared/types/*": ["../../packages/types/src/*"], // 共有型定義
+      "@shared/utils": ["../../packages/utils/src/index.ts"],
+      "@shared/utils/*": ["../../packages/utils/src/*"] // 共有ユーティリティ
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.js",
+    "prisma/**/*.ts" // Prisma の型定義などを含める
+  ],
+  "exclude": ["node_modules", "dist"]
+}

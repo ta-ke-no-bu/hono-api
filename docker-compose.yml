@@ -1,0 +1,83 @@
+# docker-compose.yml
+services:
+  hono_dev:
+    container_name: hono_dev
+    build:
+      context: .
+      # ルートの Dockerfile がある場合 (例: Turborepo の DevContainer 用)
+      dockerfile: ./Dockerfile
+      args:
+        BUN_VERSION: ${BUN_VERSION}
+        NODE_VERSION: ${NODE_VERSION}
+    volumes:
+      - .:/app # モノレポ全体をコンテナの /app にマウント
+      - node_modules_root:/app/node_modules # ルートの node_modules を永続化
+    env_file:
+      - .env
+    ports:
+      - "6006:6006"
+    command: tail -f /dev/null # コンテナを起動したままにする
+
+  hono_api:
+    container_name: hono_api
+    build:
+      context: . # ビルドコンテキストをモノレポのルートに設定
+      dockerfile: apps/api/Dockerfile
+      target: development # Bun ランタイムの development ステージをビルド
+      args:
+        BUN_VERSION: ${BUN_VERSION}
+        NODE_VERSION: ${NODE_VERSION}
+    ports:
+      - "8787:8787"
+    env_file:
+      - ./.env
+      - ./apps/api/.env
+    volumes:
+      - .:/app # モノレポ全体をコンテナの /app にマウント
+      - node_modules_root:/app/node_modules # ルートの node_modules を共有
+    depends_on: # これを追加
+      - hono_dev
+
+  hono_admin:
+    container_name: hono_admin
+    build:
+      context: . # ビルドコンテキストをモノレポのルートに設定
+      dockerfile: apps/admin/Dockerfile
+      target: development # Next.js も Bun を使うので Bun の development ステージをビルド
+      args:
+        BUN_VERSION: ${BUN_VERSION}
+        NODE_VERSION: ${NODE_VERSION}
+    ports:
+      - "5173:5173"
+    env_file:
+      - ./.env
+      - ./apps/admin/.env
+    volumes:
+      - .:/app # モノレ-ポ全体をコンテナの /app にマウント
+      - node_modules_root:/app/node_modules # ルートの node_modules を共有
+    depends_on: # これを追加
+      - hono_dev
+
+  hono_web:
+    container_name: hono_web
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        BUN_VERSION: ${BUN_VERSION}
+        NODE_VERSION: ${NODE_VERSION}
+    environment:
+      - INTERNAL_STATUS_PORT=4321
+    ports:
+      - "4321:4321"
+    env_file:
+      - ./.env
+      - ./apps/web/.env
+    volumes:
+      - .:/app
+      - node_modules_root:/app/node_modules
+    depends_on: # これを追加
+      - hono_dev
+
+volumes:
+  node_modules_root: # モノレポ全体の node_modules (Bun により管理)

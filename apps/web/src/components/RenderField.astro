@@ -1,0 +1,209 @@
+---
+import type { CustomFieldDefinition } from '@lib/posts/api'
+
+export interface Props {
+  definition: CustomFieldDefinition
+  fieldValue: unknown
+}
+
+const { definition, fieldValue } = Astro.props
+
+const slugToCamelCase = (slug: string) =>
+  slug
+    .split(/[-_\s]+/)
+    .map((segment, index) => {
+      if (index === 0) {
+        return segment.toLowerCase()
+      }
+      return segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase()
+    })
+    .join('')
+
+const getChildValue = (source: unknown, slug: string) => {
+  if (!source || typeof source !== 'object') {
+    return undefined
+  }
+  return (source as Record<string, unknown>)[slug]
+}
+
+const getItemLabel = (item: unknown, index: number) => {
+  if (!item) {
+    return `項目 ${index + 1}`
+  }
+  if (typeof item === 'object' && 'label' in (item as Record<string, unknown>)) {
+    const label = (item as { label?: unknown }).label
+    if (typeof label === 'string' && label.length > 0) {
+      return label
+    }
+    return `項目 ${index + 1}`
+  }
+  if (typeof item === 'string') {
+    return item
+  }
+  return String(item)
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value)
+
+const stringValue = typeof fieldValue === 'string' ? fieldValue : null
+const richTextValue =
+  fieldValue && typeof fieldValue === 'object' && 'html' in (fieldValue as Record<string, unknown>)
+    ? (fieldValue as { html: string })
+    : null
+const fileValue =
+  fieldValue && typeof fieldValue === 'object' && 'url' in (fieldValue as Record<string, unknown>)
+    ? (fieldValue as { url: string; fileName?: string })
+    : null
+const arrayItems = Array.isArray(fieldValue) ? (fieldValue as unknown[]) : null
+const groupValue =
+  fieldValue && typeof fieldValue === 'object' && !Array.isArray(fieldValue)
+    ? (fieldValue as Record<string, unknown>)
+    : null
+
+const handledTypes = new Set(['text', 'date', 'richText', 'select', 'checkbox', 'file', 'group', 'repeatable'])
+
+const getSelectOptions = (def: CustomFieldDefinition) => {
+  const config = def.config
+  if (!config || typeof config !== 'object') {
+    return []
+  }
+  const rawOptions = (config as { options?: unknown }).options
+  if (!Array.isArray(rawOptions)) {
+    return []
+  }
+  return rawOptions.filter((option): option is { label: string; value: string } => {
+    if (!isRecord(option)) {
+      return false
+    }
+    return typeof option.label === 'string' && typeof option.value === 'string'
+  })
+}
+
+const resolveSelectLabel = (def: CustomFieldDefinition, value: unknown): string | null => {
+  const options = getSelectOptions(def)
+  if (typeof value === 'string') {
+    const match = options.find((option) => option.value === value)
+    return match ? match.label : value
+  }
+  if (isRecord(value) && typeof value.value === 'string') {
+    const match = options.find((option) => option.value === value.value)
+    if (match) {
+      return match.label
+    }
+    if (typeof value.label === 'string' && value.label.length > 0) {
+      return value.label
+    }
+    return value.value
+  }
+  return null
+}
+
+const resolveCheckboxItemLabel = (def: CustomFieldDefinition, item: unknown, index: number) => {
+  const options = getSelectOptions(def)
+  if (typeof item === 'string') {
+    const match = options.find((option) => option.value === item)
+    return match ? match.label : item
+  }
+  if (isRecord(item) && typeof item.value === 'string') {
+    const match = options.find((option) => option.value === item.value)
+    if (match) {
+      return match.label
+    }
+    if (typeof item.label === 'string' && item.label.length > 0) {
+      return item.label
+    }
+    return item.value
+  }
+  return getItemLabel(item, index)
+}
+---
+
+<div class="field-wrapper">
+  <strong class="field-label">{definition.label}</strong>
+  <div class="field-value">
+    {(definition.type === 'text' || definition.type === 'date') && stringValue && (
+      <p>{stringValue}</p>
+    )}
+
+    {definition.type === 'select' &&
+      (() => {
+        const label = resolveSelectLabel(definition, fieldValue)
+        return label ? <p>{label}</p> : null
+      })()}
+
+    {definition.type === 'richText' && richTextValue && (
+      <div set:html={richTextValue.html}></div>
+    )}
+
+    {definition.type === 'checkbox' && arrayItems && arrayItems.length > 0 && (
+      <ul>
+        {arrayItems.map((item, index) => (
+          <li>{resolveCheckboxItemLabel(definition, item, index)}</li>
+        ))}
+      </ul>
+    )}
+
+    {definition.type === 'file' && fileValue && (
+      <a href={fileValue.url} target="_blank" rel="noopener noreferrer">
+        {fileValue.fileName ?? 'Download'}
+      </a>
+    )}
+
+    {definition.type === 'group' && groupValue && (
+      <div class="nested-group">
+        {definition.children?.map((childDef) => (
+          <Astro.self
+            definition={childDef}
+            fieldValue={getChildValue(groupValue, slugToCamelCase(childDef.slug))}
+          />
+        ))}
+      </div>
+    )}
+
+    {definition.type === 'repeatable' && arrayItems && arrayItems.length > 0 && (
+      <ul class="repeatable-list">
+        {arrayItems.map((item, index) => (
+          <li class="repeatable-item">
+            {definition.children?.length === 1 && !isRecord(item)
+              ? (() => {
+                  const childDef = definition.children![0]!
+                  const label =
+                    childDef.type === 'select'
+                      ? resolveSelectLabel(childDef, item)
+                      : childDef.type === 'checkbox' && Array.isArray(item)
+                        ? (item as unknown[]).map((childItem, childIndex) => resolveCheckboxItemLabel(childDef, childItem, childIndex)).join(', ')
+                        : typeof item === 'string'
+                          ? item
+                          : String(item ?? '')
+                  return (
+                    <div class="repeatable-primitive">
+                      <span class="repeatable-index">#{index + 1}</span>
+                      <span>{label}</span>
+                    </div>
+                  )
+                })()
+              : definition.children?.map((childDef) => (
+                  <Astro.self
+                    definition={childDef}
+                    fieldValue={isRecord(item) ? getChildValue(item, slugToCamelCase(childDef.slug)) : undefined}
+                  />
+                ))}
+          </li>
+        ))}
+      </ul>
+    )}
+
+    {!handledTypes.has(definition.type) && (
+      <pre>{JSON.stringify(fieldValue, null, 2)}</pre>
+    )}
+  </div>
+</div>
+
+<style>
+  .field-wrapper { margin-bottom: 1rem; }
+  .field-label { display: block; margin-bottom: 0.25rem; }
+  .nested-group { border-left: 2px solid #eee; padding-left: 1rem; margin-top: 0.5rem; }
+  .repeatable-list { list-style: none; padding: 0; }
+  .repeatable-item { border: 1px solid #eee; padding: 1rem; margin-top: 1rem; border-radius: 4px; }
+</style>

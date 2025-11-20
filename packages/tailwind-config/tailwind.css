@@ -1,0 +1,7 @@
+@import "tailwindcss" source(none);
+@import "./shared-styles.css";
+
+@source "../../apps/admin/src/**/*.{html,md,mdx,svelte,ts,tsx,js,jsx}";
+@source "../../apps/web/src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue,scss,css}";
+@source "../../packages/ui/src/**/*.{svelte,ts,tsx,js,jsx,md,mdx,css,scss}";
+@source "../../packages/components/**/*.{astro,html,js,jsx,ts,tsx,svelte}";

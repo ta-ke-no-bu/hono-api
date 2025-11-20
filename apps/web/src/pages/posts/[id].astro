@@ -1,0 +1,84 @@
+---
+import RenderCustomFields from '@components/RenderCustomFields.astro'
+import Layout from '@layouts/Layout.astro'
+import { type PublicPost, fetchPublicPostById } from '@lib/posts/api'
+
+export const prerender = false
+
+const { id } = Astro.params
+
+let post: PublicPost | null = null
+let fetchError: string | null = null
+
+if (!id) {
+  fetchError = '投稿が特定できませんでした。'
+} else {
+  post = await fetchPublicPostById(id)
+  if (!post) {
+    fetchError = '指定された投稿が見つかりませんでした。'
+  }
+}
+
+const formatDate = (value: string | null) => {
+  if (!value) {
+    return '未設定'
+  }
+  try {
+    return new Intl.DateTimeFormat('ja-JP', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date(value))
+  } catch {
+    return value ?? '未設定'
+  }
+}
+
+const metadataEntries = (target: PublicPost | null) => {
+  if (!target) {
+    return []
+  }
+  return [
+    { label: 'カテゴリ', value: target.categoryName ?? '未設定' },
+    { label: 'テンプレート', value: target.postSettingName ?? '未設定' },
+    { label: '公開日', value: formatDate(target.publishedAt) },
+    { label: '掲載日', value: formatDate(target.postedAt) },
+  ]
+}
+---
+
+<Layout pageTitleJa={post ? post.title : '投稿詳細'}>
+  <section class="space-y-6">
+    <a href="/posts" class="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-800">&larr; 投稿一覧に戻る</a>
+
+    {fetchError ? (
+      <p class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{fetchError}</p>
+    ) : post ? (
+      <article class="space-y-6 rounded-md border border-gray-200 bg-white px-6 py-6 shadow-sm">
+        <header class="space-y-2">
+          <h1 class="text-2xl font-semibold text-gray-900">{post.title}</h1>
+          <dl class="flex flex-wrap gap-4 text-xs text-gray-500">
+            {metadataEntries(post).map((item) => (
+              <div>
+                <dt class="font-semibold">{item.label}</dt>
+                <dd>{item.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </header>
+
+        {post.detailBody ? (
+          <div class="prose prose-sm max-w-none text-gray-800" set:html={post.detailBody}></div>
+        ) : (
+          <p class="text-sm text-gray-600">本文の詳細はありません。</p>
+        )}
+
+        {post.customFieldSet && post.customFieldSet.definitions?.length && post.customFields ? (
+          <RenderCustomFields fieldSet={post.customFieldSet} fields={post.customFields} />
+        ) : null}
+      </article>
+    ) : (
+      <p class="text-sm text-gray-600">読み込み中です…</p>
+    )}
+  </section>
+</Layout>
