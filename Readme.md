@@ -1,8 +1,10 @@
 # 🚀 Hono + Bun Monorepo テンプレート
 
-Cloudflare エコシステム（Workers / Pages / D1 / Turnstile / R2 など）を前提にした、Bun ベースのモノレポ開発環境です。高速性とセキュリティを両立させつつ、API・管理画面・外部サイト連携を一括で管理できます。
+Cloudflare エコシステム（Workers / Pages / D1 / Turnstile / R2 など）を前提にした、Bun ベースのモノレポ開発環境です。
+高速性とセキュリティを両立させつつ、API・管理画面・外部サイト連携を一括で管理できるよう務めています。
 
-> 👣 **初めてのセットアップや Cloudflare 設定は** `Readme-beginners.md` を参照してください。外部プロジェクトから API を利用する場合は `Readme-external.md` を確認します。
+> 👣 **初めてのセットアップや Cloudflare 設定は** `Readme-beginners.md` を参照してください。
+> 外部プロジェクトから API を利用する場合は `Readme-external.md` を確認します。
 
 ## 目次
 
