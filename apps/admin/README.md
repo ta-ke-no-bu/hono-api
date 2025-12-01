@@ -44,8 +44,6 @@
 
 - テンプレート未指定時に利用する既定テンプレート。削除禁止。
 - 無効化されるとテンプレート無し投稿が 409 で失敗します。
-- 万が一欠損した場合は Runbook（`../api/docs/migrate-legacy-posts-runbook.md`）に従って復旧してください。
-
 ---
 
 ## 3. 投稿作成フロー
@@ -106,4 +104,3 @@
 
 - API 実装: `apps/api/src/routes/posts.ts`, `apps/api/src/services/post.ts`
 - テンプレート仕様書: ルート直下 `post-groupe-spec.md`
-- Runbook: `apps/api/docs/migrate-legacy-posts-runbook.md`
