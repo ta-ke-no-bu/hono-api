@@ -17,8 +17,7 @@
     "fix": "biome check --write ./src",
     "test": "vitest run --exclude **/*.e2e.spec.ts",
     "test:api": "vitest run --exclude **/*.e2e.spec.ts",
-    "test:once": "vitest run",
-    "migrate:legacy-posts": "bun run scripts/migrate-legacy-posts.ts"
+    "test:once": "vitest run"
   },
   "devDependencies": {
     "prisma": "^6.16.2",
